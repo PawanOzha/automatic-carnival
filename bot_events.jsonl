@@ -1,0 +1,8 @@
+{"ts": "2026-04-23T16:10:30Z", "type": "bot_start", "message": "Bot started for KCS-USDT", "data": {"live": false, "symbol": "KCS-USDT"}}
+{"ts": "2026-04-23T16:10:30Z", "type": "log", "message": "Bot started | symbol=KCS-USDT | live=False | target=5.0 USDT | daily_losses=0", "data": {}}
+{"ts": "2026-04-23T16:10:33Z", "type": "log", "message": "price=8.478000  fast_ema=8.477264  slow_ema=8.476180  total≈3.9227  usdt=3.8084  KCS=0.013479  losses_today=0/2", "data": {}}
+{"ts": "2026-04-23T16:10:33Z", "type": "log", "message": "⏳ No entry signal", "data": {}}
+{"ts": "2026-04-23T16:11:03Z", "type": "log", "message": "price=8.479000  fast_ema=8.477771  slow_ema=8.476519  total≈3.9227  usdt=3.8084  KCS=0.013479  losses_today=0/2", "data": {}}
+{"ts": "2026-04-23T16:11:03Z", "type": "log", "message": "⏳ No entry signal", "data": {}}
+{"ts": "2026-04-23T16:11:34Z", "type": "log", "message": "price=8.480000  fast_ema=8.477971  slow_ema=8.476610  total≈3.9227  usdt=3.8084  KCS=0.013479  losses_today=0/2", "data": {}}
+{"ts": "2026-04-23T16:11:34Z", "type": "log", "message": "⏳ No entry signal", "data": {}}
