@@ -312,6 +312,13 @@ def main():
 
     state = load_state()
     log(f"Bot v3 started | {SYMBOL} | live={LIVE_TRADING} | target={TARGET_USDT}")
+    log(
+        "Config | "
+        f"min_wallet={MIN_WALLET_USDT} "
+        f"min_trade={MIN_USDT_TO_TRADE} "
+        f"max_trade={MAX_USDT_PER_TRADE} "
+        f"position_pct={POSITION_PCT}"
+    )
 
     while True:
         try:
