@@ -193,6 +193,7 @@ def get_symbol_info(symbol: str) -> dict:
         if s["symbol"] == symbol:
             info = {"baseMinSize": float(s["baseMinSize"]),
                     "baseIncrement": float(s["baseIncrement"]),
+                    "baseIncrementStr": s.get("baseIncrement", "0.000001"),
                     "quoteMinSize": float(s.get("quoteMinSize", "1")),
                     "priceIncrement": s.get("priceIncrement", "0.000001")}
             _sym_cache[symbol] = info
@@ -203,6 +204,14 @@ def round_size(raw: float, inc: float) -> float:
     if inc <= 0:
         return raw
     return int(raw / inc) * inc
+
+def round_size_decimal(raw: float, inc_s: str) -> float:
+    inc = Decimal(str(inc_s))
+    return float(Decimal(str(raw)).quantize(inc, rounding=ROUND_DOWN))
+
+def size_to_str(size: float, inc_s: str) -> str:
+    inc = Decimal(str(inc_s))
+    return str(Decimal(str(size)).quantize(inc, rounding=ROUND_DOWN))
 
 def round_price(raw: float, inc_s: str) -> float:
     inc = Decimal(str(inc_s))
@@ -320,7 +329,9 @@ def main():
             info     = get_symbol_info(SYMBOL)
             min_base = info["baseMinSize"]
             base_inc = info["baseIncrement"]
+            base_inc_s = info.get("baseIncrementStr", "0.000001")
             price_inc = info.get("priceIncrement", "0.000001")
+            log(f"DEBUG: {SYMBOL} increments price={price_inc} size={base_inc_s} minBase={min_base}")
 
             rsi_now  = calc_rsi(closes, RSI_PERIOD)
             _, bb_lo, bb_up = calc_bb(closes, BB_PERIOD, BB_STD)
@@ -443,7 +454,7 @@ def main():
                         cancel_order(tp_id)
                     sell_sz = min(size, base_avail)
                     if sell_sz >= min_base:
-                        market_sell(SYMBOL, q6(sell_sz))
+                        market_sell(SYMBOL, size_to_str(sell_sz, base_inc_s))
                     net = pnl - MAKER_FEE - TAKER_FEE
                     log(f"📈 Trail exit | gross={pnl:.4%} net≈{net:.4%} peak={peak:.6f}")
                     clear_position(state); clear_pending(state); save_state(state)
@@ -455,10 +466,11 @@ def main():
                         tp_gross = TAKE_PROFIT_PCT + 2 * MAKER_FEE
                         tp_price_raw = max(entry * (1 + tp_gross), best_ask * 1.0002)
                         tp_price = round_price(tp_price_raw, price_inc)
-                        tp_res = limit_sell(SYMBOL, price_to_str(tp_price, price_inc), q6(size))
+                        tp_size = round_size_decimal(size, base_inc_s)
+                        tp_res = limit_sell(SYMBOL, price_to_str(tp_price, price_inc), size_to_str(tp_size, base_inc_s))
                         state["tp_order_id"] = tp_res.get("orderId", "dry-tp")
                         save_state(state)
-                        log(f"🧩 TP placed p={price_to_str(tp_price, price_inc)} s={q6(size)}")
+                        log(f"🧩 TP placed p={price_to_str(tp_price, price_inc)} s={size_to_str(tp_size, base_inc_s)}")
 
                     # hard stop-loss — emergency market exit
                     if pnl <= -STOP_LOSS_PCT:
@@ -466,7 +478,7 @@ def main():
                             cancel_order(tp_id)
                         sell_sz = min(size, base_avail)
                         if sell_sz >= min_base:
-                            market_sell(SYMBOL, q6(sell_sz))
+                            market_sell(SYMBOL, size_to_str(sell_sz, base_inc_s))
                             sl_filled = True
                         else:
                             log(f"⚠️ SL triggered but size too small ({sell_sz:.6f})")
@@ -494,7 +506,8 @@ def main():
                     tp_gross = TAKE_PROFIT_PCT + 2 * MAKER_FEE
                     tp_p_raw = max(price * (1 + tp_gross), best_ask * 1.0002)
                     tp_p = round_price(tp_p_raw, price_inc)
-                    tp_res = limit_sell(SYMBOL, price_to_str(tp_p, price_inc), q6(base_avail))
+                    rec_size = round_size_decimal(base_avail, base_inc_s)
+                    tp_res = limit_sell(SYMBOL, price_to_str(tp_p, price_inc), size_to_str(rec_size, base_inc_s))
                     state["tp_order_id"] = tp_res.get("orderId", "dry-tp")
                     save_state(state)
 
@@ -507,13 +520,12 @@ def main():
                         else:
                             buy_p = round_price(best_bid * 0.9998, price_inc)  # snap to tick
                             raw   = spend / buy_p
-                            size  = round_size(raw, base_inc)
+                            size  = round_size_decimal(raw, base_inc_s)
                             if size < min_base:
                                 log(f"Size {size} < min {min_base}, skip.")
                             else:
                                 bp_s = price_to_str(buy_p, price_inc)
-                                sz_s = q6(size)
-                                log(f"DEBUG: Symbol {SYMBOL} allows price increment: {price_inc}")
+                                sz_s = size_to_str(size, base_inc_s)
                                 res  = limit_buy(SYMBOL, bp_s, sz_s)
                                 oid  = res.get("orderId", "dry-buy")
                                 state.update({
