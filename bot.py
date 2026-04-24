@@ -41,7 +41,7 @@ BUY_TIMEOUT_SEC    = int(os.getenv("BUY_TIMEOUT_SEC",     "120"))
 COOLDOWN_SEC       = int(os.getenv("COOLDOWN_SEC",        "300"))
 
 RSI_PERIOD         = int(os.getenv("RSI_PERIOD",          "14"))
-RSI_OVERSOLD       = float(os.getenv("RSI_OVERSOLD",      "35"))
+RSI_OVERSOLD       = float(os.getenv("RSI_OVERSOLD",      "50"))
 BB_PERIOD          = int(os.getenv("BB_PERIOD",           "20"))
 BB_STD             = float(os.getenv("BB_STD",            "2.0"))
 CANDLE_TYPE        = os.getenv("CANDLE_TYPE",             "5min")
